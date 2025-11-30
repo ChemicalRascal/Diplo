@@ -3,7 +3,10 @@
 namespace BSBackupSystem.Model.App;
 
 public class User : User<Guid>
-{ }
+{
+    public User() { }
+    public User(string userName) : base(userName) { }
+}
 
 public class User<TKey> where TKey : IEquatable<TKey>
 {
