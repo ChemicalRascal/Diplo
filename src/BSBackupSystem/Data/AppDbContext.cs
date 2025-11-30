@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BSBackupSystem.Model.Diplo;
+using Microsoft.EntityFrameworkCore;
 
 namespace BSBackupSystem.Data;
 
@@ -6,6 +7,56 @@ public class AppDbContext : AppIdentityDbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
+    { }
+
+    public DbSet<UnitOrder> UnitOrders { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
     {
+        base.OnModelCreating(builder);
+
+        builder.Entity<Game>(b =>
+        {
+            b.HasMany(g => g.MoveSets).WithOne();
+        });
+
+        builder.Entity<MoveSet>(b =>
+        {
+            b.HasMany(ms => ms.Orders).WithOne();
+        });
+
+        builder.Entity<HoldOrder>();
+
+        builder.Entity<MoveOrder>()
+            .Property(o => o.To)
+            .HasColumnName("to");
+
+        builder.Entity<SupportHoldOrder>()
+            .Property(o => o.Supporting)
+            .HasColumnName("to");
+
+        builder.Entity<SupportMoveOrder>(b =>
+        {
+            b.Property(o => o.SupportingFrom)
+             .HasColumnName("from");
+            b.Property(o => o.SupportingTo)
+             .HasColumnName("to");
+        });
+
+        builder.Entity<ConvoyOrder>(b =>
+        {
+            b.Property(o => o.ConvoyFrom)
+             .HasColumnName("from");
+            b.Property(o => o.ConvoyTo)
+             .HasColumnName("to");
+        });
+
+        builder.Entity<RetreatOrder>()
+            .Property(o => o.To)
+            .HasColumnName("to");
+
+        builder.Entity<BuildOrder>();
+
+        builder.Entity<DisbandOrder>();
     }
 }
