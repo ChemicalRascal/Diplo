@@ -7,6 +7,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.IdentityModel.Tokens;
+using BSBackupSystem.Model.Diplo;
+using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.EntityFrameworkCore.Design.Internal;
 
 namespace BSBackupSystem;
 
@@ -22,7 +25,7 @@ public class Program
         {
             var connectionString = builder.Configuration.GetConnectionString(POSTGRES)
                 ?? throw new InvalidOperationException($"Connection string '{POSTGRES}' not found.");
-            options.UseNpgsql(connectionString).UseLowerCaseNamingConvention();
+            options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention();
         };
 
         builder.Services.AddScoped<IUserStore<User>, AppUserStore>();
@@ -62,6 +65,7 @@ public class Program
         app.MapRazorPages()
            .WithStaticAssets();
 
+        await app.AddMockGame();
         await app.AddUserRolesAsync();
         await app.AddSeededUsersAsync();
 
@@ -71,7 +75,7 @@ public class Program
 
 public static class SetupExtensions
 {
-    private static void throwOnFailure(IdentityResult? result)
+    private static void ThrowOnFailure(IdentityResult? result)
     {
         if ((!result?.Succeeded) ?? true)
         {
@@ -83,23 +87,45 @@ public static class SetupExtensions
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string[] Roles { get; set; } = Array.Empty<string>();
+        public string[] Roles { get; set; } = [];
     }
 
     extension(WebApplication app)
     {
+        public async Task AddMockGame()
+        {
+            using (var scope = app.Services.CreateScope())
+            {
+                var appDb = scope.ServiceProvider.GetService<AppDbContext>();
+
+                var game = new Game() { Uri = "" };
+                game.MoveSets.Add(new() { State = "", FullHash = "", PreRetreatHash = "", SeasonIndex = 0, Year = 0 });
+                game.MoveSets[0].Orders.AddRange([
+                    new HoldOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },
+                    new MoveOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", To = "" },
+                    new SupportHoldOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", Supporting = "" },
+                    new SupportMoveOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", SupportingFrom = "", SupportingTo = "" },
+                    new ConvoyOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", ConvoyFrom = "", ConvoyTo = "" },
+                    new RetreatOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", To = "" },
+                    new BuildOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },
+                    new DisbandOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },
+                    ]);
+                appDb!.Add(game);
+                await appDb.SaveChangesAsync();
+            }
+        }
+
         public async Task AddUserRolesAsync()
         {
-            var desiredRoles = Enum.GetValues<UserRole>().Except([UserRole.Unknown]).Select(Enum.GetName);
+            var supportedRoles = Enum.GetValues<UserRole>().Except([UserRole.Unknown]).Select(Enum.GetName);
             using (var scope = app.Services.CreateScope())
             {
                 var roleManager = scope.ServiceProvider.GetService<RoleManager<AppRole>>();
-                foreach (var role in desiredRoles)
+                foreach (var role in supportedRoles)
                 {
                     if (!await roleManager!.RoleExistsAsync(role!))
                     {
-                        var createResult = await roleManager.CreateAsync(new(role!));
-                        throwOnFailure(createResult);
+                        ThrowOnFailure(await roleManager.CreateAsync(new(role!)));
                     }
                 }
             }
@@ -126,13 +152,13 @@ public static class SetupExtensions
                         continue;
                     }
 
-                    throwOnFailure(await userManager.CreateAsync(new User(user.Email)
+                    ThrowOnFailure(await userManager.CreateAsync(new User(user.Email)
                     {
                         Email = user.Email,
                         EmailConfirmed = true,
                     }, user.Password));
                     dbUser = await userManager!.FindByEmailAsync(user.Email);
-                    throwOnFailure(await userManager.AddToRolesAsync(dbUser!, user.Roles));
+                    ThrowOnFailure(await userManager.AddToRolesAsync(dbUser!, user.Roles));
                 }
             }
         }

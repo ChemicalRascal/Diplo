@@ -63,16 +63,16 @@ public abstract class AppIdentityDbContext<TUser, TRole, TKey, TUserClaim, TUser
     {
         var maxKeyLength = 128;
         var protector = this.GetInfrastructure().GetService<IPersonalDataProtector>();
-        PersonalDataConverter? converter = protector is not null
+        var converter = protector is not null
             ? new PersonalDataConverter(protector)
             : null;
 
         builder.Entity<TUser>(b =>
         {
             b.HasKey(u => u.Id);
-            b.HasIndex(u => u.NormalizedUserName).HasDatabaseName("UserNameIndex").IsUnique();
-            b.HasIndex(u => u.NormalizedEmail).HasDatabaseName("EmailIndex");
-            b.ToTable("SystemUsers");
+            b.HasIndex(u => u.NormalizedUserName).HasDatabaseName("idx_users_normalized_user_name").IsUnique();
+            b.HasIndex(u => u.NormalizedEmail).HasDatabaseName("idx_users_normalized_email");
+            b.ToTable("system_users");
             b.Property(u => u.ConcurrencyStamp).IsConcurrencyToken();
 
             b.Property(u => u.UserName).HasMaxLength(256);
@@ -103,7 +103,7 @@ public abstract class AppIdentityDbContext<TUser, TRole, TKey, TUserClaim, TUser
         builder.Entity<TUserClaim>(b =>
         {
             b.HasKey(uc => uc.Id);
-            b.ToTable("SystemUserClaims");
+            b.ToTable("system_user_claims");
         });
 
         builder.Entity<TUserLogin>(b =>
@@ -112,7 +112,7 @@ public abstract class AppIdentityDbContext<TUser, TRole, TKey, TUserClaim, TUser
             b.Property(l => l.LoginProvider).HasMaxLength(maxKeyLength);
             b.Property(l => l.ProviderKey).HasMaxLength(maxKeyLength);
 
-            b.ToTable("SystemUserLogins");
+            b.ToTable("system_user_logins");
         });
 
         builder.Entity<TUserToken>(b =>
@@ -135,14 +135,14 @@ public abstract class AppIdentityDbContext<TUser, TRole, TKey, TUserClaim, TUser
                 }
             }
 
-            b.ToTable("SystemUserTokens");
+            b.ToTable("system_user_tokens");
         });
 
         builder.Entity<TRole>(b =>
         {
             b.HasKey(r => r.Id);
-            b.HasIndex(r => r.NormalizedName).HasDatabaseName("RoleNameIndex").IsUnique();
-            b.ToTable("SystemRoles");
+            b.HasIndex(r => r.NormalizedName).HasDatabaseName("index_role_normalized_name").IsUnique();
+            b.ToTable("system_roles");
             b.Property(r => r.ConcurrencyStamp).IsConcurrencyToken();
 
             b.Property(u => u.Name).HasMaxLength(256);
@@ -155,13 +155,13 @@ public abstract class AppIdentityDbContext<TUser, TRole, TKey, TUserClaim, TUser
         builder.Entity<TRoleClaim>(b =>
         {
             b.HasKey(rc => rc.Id);
-            b.ToTable("SystemRoleClaims");
+            b.ToTable("system_role_claims");
         });
 
         builder.Entity<TUserRole>(b =>
         {
             b.HasKey(r => new { r.UserId, r.RoleId });
-            b.ToTable("SystemUserRoles");
+            b.ToTable("system_user_roles");
         });
     }
 }

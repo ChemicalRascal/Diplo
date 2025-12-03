@@ -9,6 +9,8 @@ public class AppDbContext : AppIdentityDbContext
         : base(options)
     { }
 
+    public DbSet<Game> Games { get; set; }
+    public DbSet<MoveSet> MoveSets { get; set; }
     public DbSet<UnitOrder> UnitOrders { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
