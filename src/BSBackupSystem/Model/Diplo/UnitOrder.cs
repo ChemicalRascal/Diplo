@@ -26,6 +26,8 @@ public class HoldOrder : UnitOrder
 public class MoveOrder : UnitOrder
 {
     public string To { get; set; } = default!;
+    public string? ToCoast { get; set; }
+    public bool? ViaConvoy { get; set; } = null; // For later development, not currently persisted.
     public override string OrderString => $"{UnitDescription} To {To}";
 }
 
@@ -52,6 +54,7 @@ public class ConvoyOrder : UnitOrder
 public class RetreatOrder : UnitOrder
 {
     public string To { get; set; } = default!;
+    public string? ToCoast { get; set; }
     public override string OrderString => $"{UnitDescription} Retreats To {To}";
 }
 
@@ -63,4 +66,20 @@ public class BuildOrder : UnitOrder
 public class DisbandOrder : UnitOrder
 {
     public override string OrderString => $"Disbands {UnitDescription}";
+}
+
+public static partial class Extensions
+{
+    extension(IEnumerable<UnitOrder> orders)
+    {
+        public int GetOrderSetHash() => 
+            orders.Aggregate(0, (runningHash, order) =>
+                runningHash ^= $"{order.Player}: {order}".GetHashCode());
+
+        public IEnumerable<UnitOrder> NoRetreats() =>
+            orders.Where(o => !o.GetType().IsAssignableFrom(typeof(RetreatOrder)));
+
+        public IEnumerable<UnitOrder> OnlyRetreats() =>
+            orders.Where(o => o.GetType().IsAssignableFrom(typeof(RetreatOrder)));
+    }
 }

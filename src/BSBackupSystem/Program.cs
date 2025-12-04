@@ -1,10 +1,11 @@
 using BSBackupSystem.Data;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using BSBackupSystem.Model.App;
-using Microsoft.IdentityModel.Tokens;
 using BSBackupSystem.Model.Diplo;
 using BSBackupSystem.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Quartz;
 
 namespace BSBackupSystem;
 
@@ -35,11 +36,20 @@ public class Program
             options.Password.RequireDigit = false;
             options.Password.RequireNonAlphanumeric = false;
         }).AddDefaultTokenProviders();
-            //TODO: Requisite encryption classes
-            //.AddPersonalDataProtection()
+        //TODO: Requisite encryption classes
+        //.AddPersonalDataProtection()
         builder.Services.AddRazorPages();
+        builder.Services.AddQuartz(q =>
+        {
+            q.RegisterCoreJobs();
+        });
+        builder.Services.AddQuartzHostedService(opt =>
+        {
+            opt.WaitForJobsToComplete = true;
+        });
 
-        builder.Services.AddScoped<DiploDataManager>();
+        builder.Services.AddDiploDataManager();
+        builder.Services.AddGameReader();
 
         var app = builder.Build();
 
@@ -98,7 +108,7 @@ public static class SetupExtensions
                 var appDb = scope.ServiceProvider.GetService<AppDbContext>();
 
                 var game = new Game() { Uri = "", ForeignId = "", CreationTime = DateTime.UnixEpoch };
-                game.MoveSets.Add(new() { State = "", FullHash = "", PreRetreatHash = "", SeasonIndex = 0, Year = 0 });
+                game.MoveSets.Add(new() { State = "", FullHash = 0, PreRetreatHash = 0, SeasonIndex = 0, Year = 0 });
                 game.MoveSets[0].Orders.AddRange([
                     new HoldOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },
                     new MoveOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", To = "" },

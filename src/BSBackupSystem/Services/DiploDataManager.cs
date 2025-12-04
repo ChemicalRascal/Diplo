@@ -1,0 +1,141 @@
+﻿using System.Text.RegularExpressions;
+using BSBackupSystem.Data;
+using BSBackupSystem.Model.Diplo;
+using Microsoft.EntityFrameworkCore;
+
+namespace BSBackupSystem.Services;
+
+public partial class DiploDataManager(AppDbContext appDb)
+{
+    [GeneratedRegex(@"^http.*\.com/sandbox/([^/]*/)?\d{10,}/?")]
+    private static partial Regex UrlSanitizationPattern();
+
+    [GeneratedRegex(@"/(\d{10,})/")]
+    private static partial Regex ForeignIdPattern();
+
+    public async Task<bool> RegisterGameAsync(string url)
+    {
+        var (properUrl, foreignId) = ExtractKeyValues(url);
+
+        if (!await appDb.Games.Where(g => g.ForeignId == foreignId).AnyAsync())
+        {
+            await appDb.Games.AddAsync(new()
+            {
+                Uri = properUrl,
+                ForeignId = foreignId,
+                CreationTime = DateTime.UtcNow,
+            });
+            await appDb.SaveChangesAsync();
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task<Game?> GetGameAsync(string url)
+    {
+        var (_, foreignId) = ExtractKeyValues(url);
+
+        return await appDb.Games.Where(g => g.ForeignId == foreignId).FirstOrDefaultAsync();
+    }
+
+    private static (string sanitizedUrl, string foreignId) ExtractKeyValues(string incomingUrl)
+    {
+        if (string.IsNullOrEmpty(incomingUrl))
+        {
+            throw new ArgumentNullException(nameof(incomingUrl));
+        }
+
+        var urlMatch = UrlSanitizationPattern().Match(incomingUrl);
+        if (!urlMatch.Success)
+        {
+            throw new ApplicationException($"DiploDataManager.ExtractKeyValues: Couldn't get URL from '{incomingUrl}'");
+        }
+
+        var sanitizedUrl = urlMatch.Value;
+        if (sanitizedUrl.Last() != '/')
+        {
+            sanitizedUrl += '/';
+        }
+
+        var idMatch = ForeignIdPattern().Match(sanitizedUrl);
+        if (!idMatch.Success || idMatch.Groups.Count != 2)
+        {
+            throw new ApplicationException($"DiploDataManager.ExtractKeyValues: Couldn't get ID from '{incomingUrl}'");
+        }
+
+        return (sanitizedUrl, idMatch.Groups[1].Value);
+    }
+
+    public async Task<Guid> UpsertMoveSetAsync(string gameUrl, MoveSet newMoveSet, Guid? previousTurnId)
+    {
+        ArgumentNullException.ThrowIfNull(gameUrl, nameof(gameUrl));
+        ArgumentNullException.ThrowIfNull(newMoveSet, nameof(newMoveSet));
+
+        var game = await GetGameAsync(gameUrl);
+        if (game is null)
+        {
+            throw new ApplicationException($"DataManager couldn't find a game for {gameUrl}.");
+        }
+
+        if (previousTurnId is not null)
+        {
+            newMoveSet.PreviousSet = game.MoveSets.First(ms => ms.Id == previousTurnId);
+        }
+
+        var setsForThisTurn = game.MoveSets.Where(ms => ms.Year == newMoveSet.Year && ms.SeasonIndex == newMoveSet.SeasonIndex).OrderBy(ms => ms.FirstSeen).ToList();
+        var activeSet = setsForThisTurn.LastOrDefault();
+
+        if (activeSet is not null
+            && activeSet.PreviousSet?.Id == newMoveSet.PreviousSet?.Id
+            && activeSet.PreRetreatHash == newMoveSet.PreRetreatHash
+            && (activeSet.FullHash == 0 || activeSet.FullHash == newMoveSet.FullHash))
+        {
+            return await UpdateMoveSetAsync(activeSet, newMoveSet);
+        }
+        else
+        {
+            return await InsertNewMoveSetAsync(game, newMoveSet);
+        }
+    }
+
+    private async Task<Guid> InsertNewMoveSetAsync(Game game, MoveSet newMoveSet)
+    {
+        newMoveSet.FirstSeen = newMoveSet.LastSeen;
+        game.MoveSets.Add(newMoveSet);
+
+        appDb.Update(game);
+        await appDb.SaveChangesAsync();
+
+        return newMoveSet.Id;
+    }
+
+    private async Task<Guid> UpdateMoveSetAsync(MoveSet oldMoveSet, MoveSet newMoveSet)
+    {
+        if (oldMoveSet.FullHash != newMoveSet.FullHash)
+        {
+            // If we're here, we should only be updating the retreats.
+            oldMoveSet.Orders.AddRange(newMoveSet.Orders.OnlyRetreats());
+            oldMoveSet.FullHash = newMoveSet.FullHash;
+        }
+
+        oldMoveSet.State = newMoveSet.State;
+        oldMoveSet.LastSeen = newMoveSet.LastSeen;
+
+        appDb.Update(oldMoveSet);
+        await appDb.SaveChangesAsync();
+
+        return oldMoveSet.Id;
+    }
+}
+
+public static class ServiceExtensions
+{
+    extension(IServiceCollection services)
+    {
+        public void AddDiploDataManager()
+        {
+            services.AddScoped<DiploDataManager>();
+        }
+    }
+}

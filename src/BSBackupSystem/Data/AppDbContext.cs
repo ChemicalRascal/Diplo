@@ -29,9 +29,14 @@ public class AppDbContext : AppIdentityDbContext
 
         builder.Entity<HoldOrder>();
 
-        builder.Entity<MoveOrder>()
-            .Property(o => o.To)
-            .HasColumnName("to");
+        builder.Entity<MoveOrder>(b =>
+        {
+            b.Property(o => o.To)
+             .HasColumnName("to");
+            b.Property(o => o.ToCoast)
+             .HasColumnName("to_coast");
+            b.Ignore(o => o.ViaConvoy);
+        });
 
         builder.Entity<SupportHoldOrder>()
             .Property(o => o.Supporting)
@@ -53,9 +58,13 @@ public class AppDbContext : AppIdentityDbContext
              .HasColumnName("to");
         });
 
-        builder.Entity<RetreatOrder>()
-            .Property(o => o.To)
-            .HasColumnName("to");
+        builder.Entity<RetreatOrder>(b =>
+        {
+            b.Property(o => o.To)
+             .HasColumnName("to");
+            b.Property(o => o.ToCoast)
+             .HasColumnName("to_coast");
+        });
 
         builder.Entity<BuildOrder>();
 
