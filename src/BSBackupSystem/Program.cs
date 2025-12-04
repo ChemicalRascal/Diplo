@@ -2,14 +2,9 @@ using BSBackupSystem.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using BSBackupSystem.Model.App;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Threading.Tasks;
-using Microsoft.Build.Framework;
 using Microsoft.IdentityModel.Tokens;
 using BSBackupSystem.Model.Diplo;
-using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.EntityFrameworkCore.Design.Internal;
+using BSBackupSystem.Services;
 
 namespace BSBackupSystem;
 
@@ -44,6 +39,8 @@ public class Program
             //.AddPersonalDataProtection()
         builder.Services.AddRazorPages();
 
+        builder.Services.AddScoped<DiploDataManager>();
+
         var app = builder.Build();
 
         if (app.Environment.IsDevelopment())
@@ -59,13 +56,15 @@ public class Program
 
         app.UseHttpsRedirection();
         app.UseRouting();
+        app.MapControllerRoute(
+            name: "areas", pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
         app.UseAuthorization();
 
         app.MapStaticAssets();
         app.MapRazorPages()
            .WithStaticAssets();
 
-        await app.AddMockGame();
+        //await app.AddMockGame();
         await app.AddUserRolesAsync();
         await app.AddSeededUsersAsync();
 
@@ -98,7 +97,7 @@ public static class SetupExtensions
             {
                 var appDb = scope.ServiceProvider.GetService<AppDbContext>();
 
-                var game = new Game() { Uri = "" };
+                var game = new Game() { Uri = "", ForeignId = "", CreationTime = DateTime.UnixEpoch };
                 game.MoveSets.Add(new() { State = "", FullHash = "", PreRetreatHash = "", SeasonIndex = 0, Year = 0 });
                 game.MoveSets[0].Orders.AddRange([
                     new HoldOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },

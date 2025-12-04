@@ -29,6 +29,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Areas\Game\Controllers\" />
+    <Folder Include="Areas\Game\Data\" />
+    <Folder Include="Areas\Game\Models\" />
+    <Folder Include="Areas\Game\Views\" />
     <Folder Include="Data\Migrations\" />
   </ItemGroup>
 

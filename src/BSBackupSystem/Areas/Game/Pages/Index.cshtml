@@ -1,0 +1,33 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Tracked Games";
+}
+
+<h3>@ViewData["Title"]</h3>
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<form id="newgame" method="post">
+    <div class="form-floating mb-3">
+        <input asp-for="Input.UrlToSubmit" class="form-control" aria-required="true" placeholder="https://www.backstabbr.com/sandbox/Our-Friendly-Game/123456/" />
+        <label asp-for="Input.UrlToSubmit" class="form-label">URL</label>
+        <span asp-validation-for="Input.UrlToSubmit" class="text-danger"></span>
+    </div>
+    <div>
+        <button id="newgame-submit" type="submit" class="w-100 btn btn-lg btn-primary">Track Sandbox</button>
+    </div>
+</form>
+
+<table class="table">
+    <tr>
+        <th>URI</th>
+        <th>Creation Time</th>
+    </tr>
+    @foreach (var game in Model.CurrentGames)
+    {
+        <tr>
+            <td>@game.Uri</td>
+            <td>@game.CreationTime</td>
+        </tr>
+    }
+</table>
