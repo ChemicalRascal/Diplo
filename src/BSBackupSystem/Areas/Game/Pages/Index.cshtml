@@ -20,13 +20,15 @@
 
 <table class="table">
     <tr>
-        <th>URI</th>
+        <th>Game URL</th>
         <th>Creation Time</th>
     </tr>
     @foreach (var game in Model.CurrentGames)
     {
         <tr>
-            <td>@game.Uri</td>
+            <td>
+                <a asp-page="Game" asp-route-id="@game.Id">@game.Uri</a>
+            </td>
             <td>@game.CreationTime</td>
         </tr>
     }

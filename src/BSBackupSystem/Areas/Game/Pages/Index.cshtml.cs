@@ -21,6 +21,7 @@ public class IndexModel(AppDbContext appDb, DiploDataManager gameManager) : Page
         CurrentGames = appDb.Games.Select(g =>
             new GameModel()
             {
+                Id = g.Id,
                 Uri = g.Uri,
                 CreationTime = g.CreationTime,
             }).ToList();
@@ -52,6 +53,7 @@ public class IndexModel(AppDbContext appDb, DiploDataManager gameManager) : Page
 
     public record GameModel
     {
+        internal Guid Id = Guid.Empty;
         internal string Uri = string.Empty;
         internal DateTimeOffset CreationTime = DateTimeOffset.UnixEpoch;
     }

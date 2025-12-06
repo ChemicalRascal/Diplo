@@ -8,6 +8,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Areas\Game\Controllers\**" />
+    <Compile Remove="Areas\Game\Data\**" />
+    <Compile Remove="Areas\Game\Models\**" />
+    <Compile Remove="Areas\Game\Views\**" />
+    <Content Remove="Areas\Game\Controllers\**" />
+    <Content Remove="Areas\Game\Data\**" />
+    <Content Remove="Areas\Game\Models\**" />
+    <Content Remove="Areas\Game\Views\**" />
+    <EmbeddedResource Remove="Areas\Game\Controllers\**" />
+    <EmbeddedResource Remove="Areas\Game\Data\**" />
+    <EmbeddedResource Remove="Areas\Game\Models\**" />
+    <EmbeddedResource Remove="Areas\Game\Views\**" />
+    <None Remove="Areas\Game\Controllers\**" />
+    <None Remove="Areas\Game\Data\**" />
+    <None Remove="Areas\Game\Models\**" />
+    <None Remove="Areas\Game\Views\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="appsettings.json.templ" />
   </ItemGroup>
 
@@ -33,10 +52,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Game\Controllers\" />
-    <Folder Include="Areas\Game\Data\" />
-    <Folder Include="Areas\Game\Models\" />
-    <Folder Include="Areas\Game\Views\" />
     <Folder Include="Data\Migrations\" />
   </ItemGroup>
 
