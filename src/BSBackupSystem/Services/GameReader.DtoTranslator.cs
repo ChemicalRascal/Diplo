@@ -68,13 +68,14 @@ public partial class GameReader
                 {
                     MoveType.Build => new BuildOrder() { },
                     MoveType.Disband => new DisbandOrder() { },
+                    MoveType.RetreatDisband => new RetreatDisbandOrder() { },
                     MoveType.Hold => new HoldOrder() { },
                     MoveType.Move => new MoveOrder()
                     {
                         To = dto.To ?? string.Empty,
                         ToCoast = dto.ToCoast?.ToNullIfEmptyOrWhitespace(),
                     },
-                    MoveType.Retreat => new RetreatOrder()
+                    MoveType.RetreatMove => new RetreatMoveOrder()
                     {
                         To = dto.To ?? string.Empty,
                         ToCoast = dto.ToCoast?.ToNullIfEmptyOrWhitespace(),

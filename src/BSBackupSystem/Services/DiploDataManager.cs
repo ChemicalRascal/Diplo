@@ -32,39 +32,34 @@ public partial class DiploDataManager(AppDbContext appDb)
         return false;
     }
 
+    private readonly IQueryable<Game> gamesQueriable = appDb.Games
+        .Include(g => g.MoveSets)
+        .ThenInclude(ms => ms.Orders);
+
     public async Task<Game?> GetGameAsync(string url)
     {
         var (_, foreignId) = ExtractKeyValues(url);
 
-        return await appDb.Games.Where(g => g.ForeignId == foreignId).FirstOrDefaultAsync();
+        return await gamesQueriable
+            //appDb.Games
+            //.Include(g => g.MoveSets)
+            //.ThenInclude(ms => ms.Orders)
+            .Where(g => g.ForeignId == foreignId).FirstOrDefaultAsync();
     }
 
-    private static (string sanitizedUrl, string foreignId) ExtractKeyValues(string incomingUrl)
+    public async Task<Game?> GetGameAsync(Guid id)
     {
-        if (string.IsNullOrEmpty(incomingUrl))
-        {
-            throw new ArgumentNullException(nameof(incomingUrl));
-        }
+        return await gamesQueriable
+            //appDb.Games
+            //.Include(g => g.MoveSets)
+            //.ThenInclude(ms => ms.Orders)
+            .Where(g => g.Id == id).FirstOrDefaultAsync();
+    }
 
-        var urlMatch = UrlSanitizationPattern().Match(incomingUrl);
-        if (!urlMatch.Success)
-        {
-            throw new ApplicationException($"DiploDataManager.ExtractKeyValues: Couldn't get URL from '{incomingUrl}'");
-        }
-
-        var sanitizedUrl = urlMatch.Value;
-        if (sanitizedUrl.Last() != '/')
-        {
-            sanitizedUrl += '/';
-        }
-
-        var idMatch = ForeignIdPattern().Match(sanitizedUrl);
-        if (!idMatch.Success || idMatch.Groups.Count != 2)
-        {
-            throw new ApplicationException($"DiploDataManager.ExtractKeyValues: Couldn't get ID from '{incomingUrl}'");
-        }
-
-        return (sanitizedUrl, idMatch.Groups[1].Value);
+    public async Task<MoveSet?> GetMovesAsync(Guid gameId, Guid moveSetId)
+    {
+        var game = await GetGameAsync(gameId);
+        return game?.MoveSets.FirstOrDefault(ms => ms.Id == moveSetId);
     }
 
     public async Task<Guid> UpsertMoveSetAsync(string gameUrl, MoveSet newMoveSet, Guid? previousTurnId)
@@ -97,6 +92,34 @@ public partial class DiploDataManager(AppDbContext appDb)
         {
             return await InsertNewMoveSetAsync(game, newMoveSet);
         }
+    }
+
+    private static (string sanitizedUrl, string foreignId) ExtractKeyValues(string incomingUrl)
+    {
+        if (string.IsNullOrEmpty(incomingUrl))
+        {
+            throw new ArgumentNullException(nameof(incomingUrl));
+        }
+
+        var urlMatch = UrlSanitizationPattern().Match(incomingUrl);
+        if (!urlMatch.Success)
+        {
+            throw new ApplicationException($"DiploDataManager.ExtractKeyValues: Couldn't get URL from '{incomingUrl}'");
+        }
+
+        var sanitizedUrl = urlMatch.Value;
+        if (sanitizedUrl.Last() != '/')
+        {
+            sanitizedUrl += '/';
+        }
+
+        var idMatch = ForeignIdPattern().Match(sanitizedUrl);
+        if (!idMatch.Success || idMatch.Groups.Count != 2)
+        {
+            throw new ApplicationException($"DiploDataManager.ExtractKeyValues: Couldn't get ID from '{incomingUrl}'");
+        }
+
+        return (sanitizedUrl, idMatch.Groups[1].Value);
     }
 
     private async Task<Guid> InsertNewMoveSetAsync(Game game, MoveSet newMoveSet)

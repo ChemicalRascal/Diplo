@@ -1,4 +1,50 @@
 ﻿@page "~/Game/{id}"
 @model BSBackupSystem.Areas.Game.Pages.GameModel
 @{
+    ViewData["Title"] = "Game Page";
 }
+
+<h3>@ViewData["Title"]</h3>
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<p>Game added at @(Model.GameData.StartTime)</p>
+
+<p>Game first scraped at @(Model.GameData.FirstScrape ?? "(pending first scrape)")</p>
+
+<p><a href="@(Model.GameData.Url)">@(Model.GameData.Url)</a></p>
+
+<table class="table">
+    @{
+        <thead>
+            <tr>
+                @foreach (var header in Model.GridHeaders)
+                {
+                    <th>@($"{header.Year}, {header.Season}")</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (var j = 0; j < Model.OrdersGrid.GetLength(1); j++)
+            {
+                <tr>
+                    @for (var i = 0; i < Model.OrdersGrid.GetLength(0); i++)
+                    {
+                        <td>
+                            @{
+                                var orders = Model.OrdersGrid[i, j];
+                                if (orders is not null)
+                                {
+                                    <a asp-page="Orders"
+                                       asp-route-id="@orders.Id"
+                                       asp-route-gameId="@Model.GameData.Id">
+                                        @(orders.FirstSeen)
+                                    </a>
+                                }
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    }
+</table>

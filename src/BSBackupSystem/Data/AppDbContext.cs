@@ -58,13 +58,15 @@ public class AppDbContext : AppIdentityDbContext
              .HasColumnName("to");
         });
 
-        builder.Entity<RetreatOrder>(b =>
+        builder.Entity<RetreatMoveOrder>(b =>
         {
             b.Property(o => o.To)
              .HasColumnName("to");
             b.Property(o => o.ToCoast)
              .HasColumnName("to_coast");
         });
+
+        builder.Entity<RetreatDisbandOrder>();
 
         builder.Entity<BuildOrder>();
 

@@ -1,0 +1,33 @@
+﻿@page "~/Game/{gameId}/{id}"
+@model BSBackupSystem.Areas.Game.Pages.OrdersModel
+@{
+    ViewData["Title"] = $"Year {Model.TurnData.Year} - {Model.TurnData.Season}";
+}
+
+<h3>@ViewData["Title"]</h3>
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<a asp-page="Game" asp-route-id="@Model.GameId">Back to parent game</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Player</th>
+            <th>Moves</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var player in Model.TurnData.Orders.Keys)
+        {
+            <tr>
+                <td>@(player)</td>
+                <td>
+                    @foreach (var unit in Model.TurnData.Orders[player].OrderBy(o => o.Order))
+                    {
+                        <p>@(unit.Order)</p>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

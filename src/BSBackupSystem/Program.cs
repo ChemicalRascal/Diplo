@@ -115,7 +115,8 @@ public static class SetupExtensions
                     new SupportHoldOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", Supporting = "" },
                     new SupportMoveOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", SupportingFrom = "", SupportingTo = "" },
                     new ConvoyOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", ConvoyFrom = "", ConvoyTo = "" },
-                    new RetreatOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", To = "" },
+                    new RetreatMoveOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", To = "" },
+                    new RetreatDisbandOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },
                     new BuildOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },
                     new DisbandOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },
                     ]);

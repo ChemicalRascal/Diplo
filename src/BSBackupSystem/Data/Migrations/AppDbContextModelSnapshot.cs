@@ -476,7 +476,16 @@ namespace BSBackupSystem.Data.Migrations
                     b.HasDiscriminator().HasValue("MoveOrder");
                 });
 
-            modelBuilder.Entity("BSBackupSystem.Model.Diplo.RetreatOrder", b =>
+            modelBuilder.Entity("BSBackupSystem.Model.Diplo.RetreatDisbandOrder", b =>
+                {
+                    b.HasBaseType("BSBackupSystem.Model.Diplo.UnitOrder");
+
+                    b.ToTable("unit_orders", (string)null);
+
+                    b.HasDiscriminator().HasValue("RetreatDisbandOrder");
+                });
+
+            modelBuilder.Entity("BSBackupSystem.Model.Diplo.RetreatMoveOrder", b =>
                 {
                     b.HasBaseType("BSBackupSystem.Model.Diplo.UnitOrder");
 
@@ -493,7 +502,7 @@ namespace BSBackupSystem.Data.Migrations
 
                     b.ToTable("unit_orders", (string)null);
 
-                    b.HasDiscriminator().HasValue("RetreatOrder");
+                    b.HasDiscriminator().HasValue("RetreatMoveOrder");
                 });
 
             modelBuilder.Entity("BSBackupSystem.Model.Diplo.SupportHoldOrder", b =>

@@ -51,11 +51,20 @@ public class ConvoyOrder : UnitOrder
     public override string OrderString => $"{UnitDescription} Convoys {ConvoyFrom} To {ConvoyTo}";
 }
 
-public class RetreatOrder : UnitOrder
+public abstract class RetreatOrder : UnitOrder
+{
+}
+
+public class RetreatMoveOrder : UnitOrder
 {
     public string To { get; set; } = default!;
     public string? ToCoast { get; set; }
     public override string OrderString => $"{UnitDescription} Retreats To {To}";
+}
+
+public class RetreatDisbandOrder : UnitOrder
+{
+    public override string OrderString => $"Disbands {UnitDescription} Without Retreat";
 }
 
 public class BuildOrder : UnitOrder

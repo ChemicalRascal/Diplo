@@ -22,7 +22,8 @@ public partial class GameReader
         Hold,
         Support,
         Convoy,
-        Retreat,
+        RetreatMove,
+        RetreatDisband,
     }
 
     class UnitOrderDto
@@ -46,24 +47,6 @@ public partial class GameReader
         public string? ResultReason { get; set; }
 
         public UnitOrderDto? Retreat { get; set; }
-
-        private string UnitFull => $"{UnitType} {Unit}" + (UnitCoast is not null ? $" {UnitCoast}" : string.Empty);
-        private string ToFull => $"{To}{(ToCoast is not null ? $" {ToCoast}" : string.Empty)}";
-
-        public override string ToString()
-        {
-            return $"{Player} " + MoveType switch
-            {
-                MoveType.Build => $"Builds {UnitFull}",
-                MoveType.Disband => $"Disbands {UnitFull}",
-                MoveType.Move => $"{UnitFull} => {ToFull} ({Result})",
-                MoveType.Hold => $"{UnitFull} Holds",
-                MoveType.Support => $"{UnitFull} Support {(From is null || To is null ? $"{To ?? From} Hold" : $"{From} => {ToFull}")}",
-                MoveType.Convoy => $"{UnitFull} Convoy {From} => {ToFull}",
-                MoveType.Retreat => $"{UnitFull} Retreats to {ToFull} ({Result})",
-                _ => throw new NotImplementedException($"{MoveType}"),
-            };
-        }
     }
 
     [JsonConverter(typeof(UnitOrderDtoListConverter))]
@@ -172,7 +155,14 @@ public partial class GameReader
                 orderList.Add(order.Value);
                 if (order.Value.Retreat is not null)
                 {
-                    order.Value.Retreat.MoveType = MoveType.Retreat;
+                    if (order.Value.Retreat.MoveType == MoveType.Move)
+                    {
+                        order.Value.Retreat.MoveType = MoveType.RetreatMove;
+                    }
+                    else if (order.Value.Retreat.MoveType == MoveType.Disband)
+                    {
+                        order.Value.Retreat.MoveType = MoveType.RetreatDisband;
+                    }
                     order.Value.Retreat.Unit = order.Key;
                     orderList.Add(order.Value.Retreat);
                 }
