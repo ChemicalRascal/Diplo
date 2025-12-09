@@ -7,7 +7,7 @@ namespace BSBackupSystem.Services;
 
 public partial class DiploDataManager(AppDbContext appDb)
 {
-    [GeneratedRegex(@"^http.*\.com/sandbox/([^/]*/)?\d{10,}/?")]
+    [GeneratedRegex(@"^http.*\.com/(?:sandbox|game)/([^/]*/)?\d{10,}/?")]
     private static partial Regex UrlSanitizationPattern();
 
     [GeneratedRegex(@"/(\d{10,})/")]
@@ -86,6 +86,19 @@ public partial class DiploDataManager(AppDbContext appDb)
         {
             return await InsertNewMoveSetAsync(game, newMoveSet);
         }
+    }
+
+    public async Task<bool> DeleteGameAsync(Guid gameId)
+    {
+        var game = await GetGameAsync(gameId);
+        if (game is null)
+        {
+            return false;
+        }
+
+        appDb.Remove(game);
+        await appDb.SaveChangesAsync();
+        return true;
     }
 
     private static (string sanitizedUrl, string foreignId) ExtractKeyValues(string incomingUrl)

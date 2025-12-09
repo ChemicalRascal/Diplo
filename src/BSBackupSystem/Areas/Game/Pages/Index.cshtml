@@ -22,6 +22,7 @@
     <tr>
         <th>Game URL</th>
         <th>Creation Time</th>
+        <th></th>
     </tr>
     @foreach (var game in Model.CurrentGames)
     {
@@ -29,7 +30,30 @@
             <td>
                 <a asp-page="Game" asp-route-id="@game.Id">@game.Uri</a>
             </td>
-            <td>@game.CreationTime</td>
+            <td>
+                @game.CreationTime
+            </td>
+            <td>
+                <button class="deleteBtn btn btn-danger" data-id="@game.Id"
+@*                         asp-page-handler="Delete"
+                        asp-route-id="@game.Id"
+ *@                        >Delete</button>
+            </td>
         </tr>
     }
 </table>
+
+<script>
+    [...document.getElementsByClassName("deleteBtn")].forEach(b => 
+    {
+        b.onclick = async (e) => {
+            const p = new URLSearchParams();
+            p.append("id", e.target.dataset.id);
+            await fetch(document.location.pathname+`?${p}` ,{method:'DELETE', headers:
+        {
+            "RequestVerificationToken": document.getElementsByName("__RequestVerificationToken")[0].value
+        },
+            });
+        };
+    });
+</script>

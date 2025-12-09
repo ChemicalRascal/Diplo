@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BSBackupSystem.Data;
 using BSBackupSystem.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace BSBackupSystem.Areas.Game.Pages;
 
@@ -16,16 +17,18 @@ public class IndexModel(AppDbContext appDb, DiploDataManager gameManager) : Page
     [BindProperty]
     public required IndexSubmission Input { get; set; }
 
-    public void OnGet()
+    public async Task<IActionResult> OnGetAsync()
     {
-        CurrentGames = appDb.Games.Select(g =>
+        CurrentGames = await appDb.Games.Select(g =>
             new GameModel()
             {
                 Id = g.Id,
                 Uri = g.Uri,
                 CreationTime = g.CreationTime,
-            }).ToList();
+            }).ToListAsync();
         Input = new(string.Empty);
+
+        return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -47,6 +50,22 @@ public class IndexModel(AppDbContext appDb, DiploDataManager gameManager) : Page
         }
 
         return RedirectToAction("Index");
+    }
+
+    public async Task<IActionResult> OnDeleteAsync(Guid id)
+    {
+        var success = await gameManager.DeleteGameAsync(id);
+
+        if (!success)
+        {
+            StatusMessage = "Error: Game not deleted.";
+        }
+        else
+        {
+            StatusMessage = "Game deleted.";
+        }
+
+        return await OnGetAsync();
     }
 
     public record IndexSubmission(string UrlToSubmit);
