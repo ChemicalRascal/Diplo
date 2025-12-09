@@ -7,7 +7,7 @@ public class JobSchedule()
 {
     public static IEnumerable<(Type jobType, string cronSchedule)> GetJobs()
     {
-        yield return (typeof(ScrapingJob), "0 */2 * * * ?");
+        yield return (typeof(ScrapingJob), "*/30 * * * * ?");
         yield break;
     }
 }

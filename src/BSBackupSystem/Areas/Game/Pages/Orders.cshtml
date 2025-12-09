@@ -7,6 +7,8 @@
 <h3>@ViewData["Title"]</h3>
 <partial name="_StatusMessage" for="StatusMessage" />
 
+<p>This order set first seen at @(Model.TurnData.FirstSeen), most recently at @(Model.TurnData.LastSeen)</p>
+
 <a asp-page="Game" asp-route-id="@Model.GameId">Back to parent game</a>
 
 <table class="table">
@@ -22,7 +24,9 @@
             <tr>
                 <td>@(player)</td>
                 <td>
-                    @foreach (var unit in Model.TurnData.Orders[player].OrderBy(o => o.Order))
+                    @foreach (var unit in Model.TurnData.Orders[player]
+                                .OrderBy(o => o.IsRetreat ? 5 : 0)
+                                .ThenBy(o => o.Unit))
                     {
                         <p>@(unit.Order)</p>
                     }

@@ -165,8 +165,8 @@ namespace BSBackupSystem.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("first_seen");
 
-                    b.Property<int>("FullHash")
-                        .HasColumnType("integer")
+                    b.Property<long>("FullHash")
+                        .HasColumnType("bigint")
                         .HasColumnName("full_hash");
 
                     b.Property<Guid?>("GameId")
@@ -177,8 +177,8 @@ namespace BSBackupSystem.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_seen");
 
-                    b.Property<int>("PreRetreatHash")
-                        .HasColumnType("integer")
+                    b.Property<long>("PreRetreatHash")
+                        .HasColumnType("bigint")
                         .HasColumnName("pre_retreat_hash");
 
                     b.Property<Guid?>("PreviousSetId")

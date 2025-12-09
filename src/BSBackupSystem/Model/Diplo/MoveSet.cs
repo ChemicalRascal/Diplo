@@ -11,6 +11,8 @@ public class MoveSet
     public string State { get; set; } = default!;
     public DateTimeOffset? FirstSeen { get; set; }
     public DateTimeOffset? LastSeen { get; set; }
-    public int PreRetreatHash { get; set; } = default!;
-    public int FullHash { get; set; } = default!;
+    public uint PreRetreatHash { get; set; } = default!;
+    public uint FullHash { get; set; } = default!;
+
+    public bool Satisfied => State != "SATISFIED";
 }

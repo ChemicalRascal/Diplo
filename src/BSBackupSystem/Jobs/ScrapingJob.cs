@@ -10,7 +10,7 @@ public partial class ScrapingJob(AppDbContext appDb, GameReader gameReader)
     {
         Console.WriteLine($"{nameof(ScrapingJob)} started.");
 
-        DateTime creationCutoff= DateTime.UtcNow - TimeSpan.FromDays(1);
+        DateTime creationCutoff= DateTime.UtcNow - TimeSpan.FromDays(10);
         var pendingGames = await appDb.Games.Where(g => g.CreationTime > creationCutoff).ToListAsync();
 
         Console.WriteLine($"{pendingGames.Count} games to scrape.");

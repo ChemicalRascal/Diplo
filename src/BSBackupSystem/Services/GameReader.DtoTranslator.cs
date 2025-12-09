@@ -46,14 +46,7 @@ public partial class GameReader
 
             set.Orders.AddRange(orders.Select(UnitOrderFactory.BuildModelOrder));
             set.PreRetreatHash = set.Orders.NoRetreats().GetOrderSetHash();
-            if (blob.TurnState == "SATISFIED")
-            {
-                set.FullHash = set.Orders.GetOrderSetHash();
-            }
-            else
-            {
-                set.FullHash = 0;
-            }
+            set.FullHash = set.Orders.GetOrderSetHash();
 
             return set;
         }

@@ -41,18 +41,12 @@ public partial class DiploDataManager(AppDbContext appDb)
         var (_, foreignId) = ExtractKeyValues(url);
 
         return await gamesQueriable
-            //appDb.Games
-            //.Include(g => g.MoveSets)
-            //.ThenInclude(ms => ms.Orders)
             .Where(g => g.ForeignId == foreignId).FirstOrDefaultAsync();
     }
 
     public async Task<Game?> GetGameAsync(Guid id)
     {
         return await gamesQueriable
-            //appDb.Games
-            //.Include(g => g.MoveSets)
-            //.ThenInclude(ms => ms.Orders)
             .Where(g => g.Id == id).FirstOrDefaultAsync();
     }
 
@@ -84,7 +78,7 @@ public partial class DiploDataManager(AppDbContext appDb)
         if (activeSet is not null
             && activeSet.PreviousSet?.Id == newMoveSet.PreviousSet?.Id
             && activeSet.PreRetreatHash == newMoveSet.PreRetreatHash
-            && (activeSet.FullHash == 0 || activeSet.FullHash == newMoveSet.FullHash))
+            && (!activeSet.Satisfied || activeSet.FullHash == newMoveSet.FullHash))
         {
             return await UpdateMoveSetAsync(activeSet, newMoveSet);
         }
@@ -135,11 +129,11 @@ public partial class DiploDataManager(AppDbContext appDb)
 
     private async Task<Guid> UpdateMoveSetAsync(MoveSet oldMoveSet, MoveSet newMoveSet)
     {
-        if (oldMoveSet.FullHash != newMoveSet.FullHash)
+        if (oldMoveSet.Orders.GetOrderSetHash() != newMoveSet.Orders.GetOrderSetHash())
         {
             // If we're here, we should only be updating the retreats.
             oldMoveSet.Orders.AddRange(newMoveSet.Orders.OnlyRetreats());
-            oldMoveSet.FullHash = newMoveSet.FullHash;
+            //oldMoveSet.FullHash = newMoveSet.FullHash;
         }
 
         oldMoveSet.State = newMoveSet.State;
