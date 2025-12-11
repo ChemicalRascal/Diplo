@@ -14,7 +14,7 @@ public partial class ScrapingJob(AppDbContext appDb, GameReader gameReader, Dipl
         var pendingGames = await appDb.Games.Where(g => g.CreationTime > creationCutoff).ToListAsync();
         var gamesToDelete = await appDb.Games.Where(g => g.CreationTime < creationCutoff).ToListAsync();
 
-        Console.WriteLine($"{pendingGames.Count} games to scrape, {gamesToDelete} to delete.");
+        Console.WriteLine($"{pendingGames.Count} games to scrape, {gamesToDelete.Count} to delete.");
 
         foreach (var game in pendingGames)
         {

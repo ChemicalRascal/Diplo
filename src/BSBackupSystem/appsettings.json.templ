@@ -1,4 +1,12 @@
 {
+  "Kestrel": {
+    "Certificates": {
+      "Default": {
+        "Path": "<Path to SSL cert .pem file goes here>",
+        "KeyPath": "<Path to private key .pem file for SSL cert goes here>"
+      }
+    }
+  },
   "ConnectionStrings": {
     "Postgres": "<Postgres connection string goes here>"
   },
@@ -9,6 +17,8 @@
     }
   },
   "AllowedHosts": "*",
+  "http_ports": "80",
+  "https_ports": "443",
   "SeededUsers": [
     {
       "Email": "",
