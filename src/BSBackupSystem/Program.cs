@@ -3,9 +3,12 @@ using BSBackupSystem.Model.App;
 using BSBackupSystem.Model.Diplo;
 using BSBackupSystem.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Quartz;
+using System.Security.Claims;
+using System.Security.Policy;
 
 namespace BSBackupSystem;
 
@@ -24,18 +27,57 @@ public class Program
             options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention();
         };
 
+        builder.Services.AddEmailManager(builder.Configuration);
         builder.Services.AddScoped<IUserStore<User>, AppUserStore>();
         builder.Services.AddScoped<IRoleStore<AppRole>, AppRoleStore>();
         builder.Services.AddDbContext<AppDbContext>(doDatabaseSetup);
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
         builder.Services.AddIdentity<User, AppRole>(options =>
         {
-            options.SignIn.RequireConfirmedAccount = false;
+            options.SignIn.RequireConfirmedAccount = true;
             options.Password.RequireUppercase = false;
             options.Password.RequireLowercase = false;
             options.Password.RequireDigit = false;
             options.Password.RequireNonAlphanumeric = false;
         }).AddDefaultTokenProviders();
+
+        // TODO: Bundle this up somewhere descriptive
+        builder.Services.ConfigureApplicationCookie(options =>
+        {
+            options.Events.OnSignedIn += async (context) =>
+            {
+                var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<User>>();
+                if (context.Principal?.Identity?.Name is null)
+                {
+                    // TODO: Verify that this leads to auth failure
+                    return;
+                }
+                var dbUser = await userManager.FindByNameAsync(context.Principal.Identity.Name);
+                if (dbUser is null)
+                {
+                    // TODO: As above. Also how? Logging would be good here
+                    return;
+                }
+
+                if (dbUser.EmailConfirmed)
+                {
+                    // TODO: define claims in one location
+                    var emailConfirmed = new Claim("EmailConfirmed", "Confirmed");
+                    context.Principal.AddIdentity(new ClaimsIdentity([emailConfirmed]));
+                }
+                else
+                {
+                    context.Options.AccessDeniedPath = "/Identity/Account/ResendEmailConfirmation";
+                }
+            };
+        });
+
+        builder.Services.AddAuthorizationBuilder()
+            .AddPolicy("EmailMustBeConfirmed", policyBuilder =>
+            {
+                policyBuilder.RequireClaim("EmailConfirmed", "Confirmed");
+            });
+
         //TODO: Requisite encryption classes
         //.AddPersonalDataProtection()
         builder.Services.AddRazorPages();
@@ -72,13 +114,16 @@ public class Program
 
         app.MapStaticAssets();
         app.MapRazorPages()
-           .WithStaticAssets();
+           .WithStaticAssets()
+           //.RequireAuthorization("EmailMustBeConfirmed")
+           ;
 
-        //await app.AddMockGame();
         await app.AddUserRolesAsync();
         await app.AddSeededUsersAsync();
 
         app.Run();
+
+        Console.WriteLine($"BSBackupSystem has terminated. Goodbye!");
     }
 }
 
@@ -101,30 +146,6 @@ public static class SetupExtensions
 
     extension(WebApplication app)
     {
-        public async Task AddMockGame()
-        {
-            using (var scope = app.Services.CreateScope())
-            {
-                var appDb = scope.ServiceProvider.GetService<AppDbContext>();
-
-                var game = new Game() { Uri = "", ForeignId = "", CreationTime = DateTime.UnixEpoch };
-                game.MoveSets.Add(new() { State = "", FullHash = 0, PreRetreatHash = 0, SeasonIndex = 0, Year = 0 });
-                game.MoveSets[0].Orders.AddRange([
-                    new HoldOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },
-                    new MoveOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", To = "" },
-                    new SupportHoldOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", Supporting = "" },
-                    new SupportMoveOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", SupportingFrom = "", SupportingTo = "" },
-                    new ConvoyOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", ConvoyFrom = "", ConvoyTo = "" },
-                    new RetreatMoveOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "", To = "" },
-                    new RetreatDisbandOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },
-                    new BuildOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },
-                    new DisbandOrder() { Player = "", Result = "", ResultReason = "", Unit = "", UnitCoast = null, UnitType = "" },
-                    ]);
-                appDb!.Add(game);
-                await appDb.SaveChangesAsync();
-            }
-        }
-
         public async Task AddUserRolesAsync()
         {
             var supportedRoles = Enum.GetValues<UserRole>().Except([UserRole.Unknown]).Select(Enum.GetName);

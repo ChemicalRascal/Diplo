@@ -159,7 +159,7 @@ public partial class DiploDataManager(AppDbContext appDb)
     }
 }
 
-public static class ServiceExtensions
+public static partial class ServiceExtensions
 {
     extension(IServiceCollection services)
     {
