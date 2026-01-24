@@ -1,4 +1,6 @@
-﻿namespace BSBackupSystem.Model.Diplo;
+﻿using BSBackupSystem.Model.App;
+
+namespace BSBackupSystem.Model.Diplo;
 
 public class Game
 {
@@ -7,4 +9,5 @@ public class Game
     public string ForeignId { get; set; } = default!;
     public DateTimeOffset CreationTime { get; set; } = default;
     public List<MoveSet> MoveSets { get; set; } = [];
+    public User Owner { get; set; } = default!;
 }

@@ -35,6 +35,7 @@ public class Program
         builder.Services.AddIdentity<User, AppRole>(options =>
         {
             options.SignIn.RequireConfirmedAccount = true;
+            options.SignIn.RequireConfirmedEmail = true;
             options.Password.RequireUppercase = false;
             options.Password.RequireLowercase = false;
             options.Password.RequireDigit = false;

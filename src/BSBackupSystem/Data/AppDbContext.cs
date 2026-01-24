@@ -20,6 +20,7 @@ public class AppDbContext : AppIdentityDbContext
         builder.Entity<Game>(b =>
         {
             b.HasMany(g => g.MoveSets).WithOne();
+            b.HasOne(g => g.Owner).WithMany();
         });
 
         builder.Entity<MoveSet>(b =>

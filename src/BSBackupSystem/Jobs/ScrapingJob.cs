@@ -4,25 +4,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BSBackupSystem.Jobs;
 
-public partial class ScrapingJob(AppDbContext appDb, GameReader gameReader, DiploDataManager dataManager)
+public partial class ScrapingJob(AppDbContext appDb, GameReader gameReader, ILogger<ScrapingJob> logger)
 {
     public async Task Execute()
     {
-        Console.WriteLine($"{nameof(ScrapingJob)} started.");
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation("{} started", nameof(ScrapingJob));
+        }
 
         DateTime creationCutoff= DateTime.UtcNow - TimeSpan.FromDays(5);
         var pendingGames = await appDb.Games.Where(g => g.CreationTime > creationCutoff).ToListAsync();
-        var gamesToDelete = await appDb.Games.Where(g => g.CreationTime < creationCutoff).ToListAsync();
 
-        Console.WriteLine($"{pendingGames.Count} games to scrape, {gamesToDelete.Count} to delete.");
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation("{} games to scrape.", pendingGames.Count);
+        }
 
         foreach (var game in pendingGames)
         {
             await gameReader.ReadAndPersistGame(game.Uri);
-        }
-        foreach (var game in gamesToDelete)
-        {
-            await dataManager.DeleteGameAsync(game.Id);
         }
     }
 }

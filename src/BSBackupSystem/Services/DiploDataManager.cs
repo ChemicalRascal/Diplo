@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using BSBackupSystem.Data;
+using BSBackupSystem.Model.App;
 using BSBackupSystem.Model.Diplo;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,23 +14,24 @@ public partial class DiploDataManager(AppDbContext appDb)
     [GeneratedRegex(@"/(\d{10,})/")]
     private static partial Regex ForeignIdPattern();
 
-    public async Task<bool> RegisterGameAsync(string url)
+    public async Task<(bool success, string? reason)> RegisterGameAsync(string url, User user)
     {
         var (properUrl, foreignId) = ExtractKeyValues(url);
 
-        if (!await appDb.Games.Where(g => g.ForeignId == foreignId).AnyAsync())
+        if (await appDb.Games.Where(g => g.ForeignId == foreignId).AnyAsync())
         {
-            await appDb.Games.AddAsync(new()
-            {
-                Uri = properUrl,
-                ForeignId = foreignId,
-                CreationTime = DateTime.UtcNow,
-            });
-            await appDb.SaveChangesAsync();
-            return true;
+            return (false, "Game already tracked.");
         }
 
-        return false;
+        await appDb.Games.AddAsync(new()
+        {
+            Uri = properUrl,
+            ForeignId = foreignId,
+            CreationTime = DateTime.UtcNow,
+            Owner = user,
+        });
+        await appDb.SaveChangesAsync();
+        return (true, null);
     }
 
     private readonly IQueryable<Game> gamesQueriable = appDb.Games
@@ -88,17 +90,22 @@ public partial class DiploDataManager(AppDbContext appDb)
         }
     }
 
-    public async Task<bool> DeleteGameAsync(Guid gameId)
+    public async Task<(bool success, string? reason)> DeleteGameAsync(Guid gameId, User dbUser)
     {
         var game = await GetGameAsync(gameId);
         if (game is null)
         {
-            return false;
+            return (false, "No such game");
+        }
+
+        if (game.Owner != dbUser)
+        {
+            return (false, "User is not authorized to remove this game.");
         }
 
         appDb.Remove(game);
         await appDb.SaveChangesAsync();
-        return true;
+        return (true, null);
     }
 
     private static (string sanitizedUrl, string foreignId) ExtractKeyValues(string incomingUrl)

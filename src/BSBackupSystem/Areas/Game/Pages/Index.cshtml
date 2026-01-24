@@ -14,7 +14,7 @@
         <span asp-validation-for="Input.UrlToSubmit" class="text-danger"></span>
     </div>
     <div>
-        <button id="newgame-submit" type="submit" class="w-100 btn btn-lg btn-primary">Track Sandbox</button>
+        <button id="newgame-submit" type="submit" class="w-100 btn btn-lg btn-primary">Track Game or Sandbox</button>
     </div>
 </form>
 
@@ -34,10 +34,14 @@
                 @game.CreationTime
             </td>
             <td>
-                <button class="deleteBtn btn btn-danger" data-id="@game.Id"
-@*                         asp-page-handler="Delete"
-                        asp-route-id="@game.Id"
- *@                        >Delete</button>
+                @if (game.UserOwnsThisGame)
+                {
+                    <button class="deleteBtn btn btn-danger"
+                            data-id="@game.Id" asp-page-handler="Delete"
+                            asp-route-id="@game.Id">
+                        Delete
+                    </button>
+                }
             </td>
         </tr>
     }
@@ -49,11 +53,12 @@
         b.onclick = async (e) => {
             const p = new URLSearchParams();
             p.append("id", e.target.dataset.id);
-            await fetch(document.location.pathname+`?${p}` ,{method:'DELETE', headers:
-        {
-            "RequestVerificationToken": document.getElementsByName("__RequestVerificationToken")[0].value
-        },
+            await fetch(document.location.pathname+`?${p}`, {method:'DELETE', headers:
+            {
+                "RequestVerificationToken": document.getElementsByName("__RequestVerificationToken")[0].value
+            },
             });
+            window.location.reload();
         };
     });
 </script>

@@ -143,6 +143,10 @@ namespace BSBackupSystem.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("foreign_id");
 
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
                     b.Property<string>("Uri")
                         .IsRequired()
                         .HasColumnType("text")
@@ -150,6 +154,9 @@ namespace BSBackupSystem.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_games");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("ix_games_owner_id");
 
                     b.ToTable("games", (string)null);
                 });
@@ -539,6 +546,18 @@ namespace BSBackupSystem.Data.Migrations
                     b.ToTable("unit_orders", (string)null);
 
                     b.HasDiscriminator().HasValue("SupportMoveOrder");
+                });
+
+            modelBuilder.Entity("BSBackupSystem.Model.Diplo.Game", b =>
+                {
+                    b.HasOne("BSBackupSystem.Model.App.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_games_users_owner_id");
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("BSBackupSystem.Model.Diplo.MoveSet", b =>
